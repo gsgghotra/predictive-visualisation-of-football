@@ -6,7 +6,7 @@ import * as dotenv from 'dotenv'
 
 // list of libraries
 //Copy variables in file into environment variables
-dotenv.config({path:__dirname + '/env_varables/.env'});
+dotenv.config();
 console.log("Until you get this: " + process.env.HELLO);
 
 // Seasons Details
