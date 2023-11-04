@@ -1,14 +1,23 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Fixer = void 0;
 //Axios will handle HTTP requests to web service
-import axios from 'axios';
-
+const axios_1 = require("axios");
 //Reads keys from .env file
-import * as dotenv from 'dotenv'
-
+const dotenv = require("dotenv");
 // list of libraries
 //Copy variables in file into environment variables
-dotenv.config({path:__dirname + '/env_varables/.env'});
-console.log("Until you get this: " + process.env.HELLO);
-
+dotenv.config({ path: __dirname + 'env_variables/.env' });
+console.log(process.env.FOOTBALL_API_KEY);
 // Seasons Details
 let numSeasons = 1; // No of seasons can be increased here. Set to 0 because of limited request per minute. (Free Account)
 let seasons = ["?dateFrom=2004-08-28&dateTo=2005-05-29",
@@ -28,72 +37,57 @@ let seasons = ["?dateFrom=2004-08-28&dateTo=2005-05-29",
     "?dateFrom=2018-07-01&dateTo=2019-05-31",
     "?dateFrom=2019-07-15&dateTo=2020-07-19",
     "?dateFrom=2020-09-12&dateTo=2021-04-01"];
-
-
-
-
-
 //Class that wraps fixer.io web service
-export class Fixer {
-    //Base URL of fixer.io API
-    baseURL: string = "https://api.football-data.org/v2/";
-
+class Fixer {
+    constructor() {
+        //Base URL of fixer.io API
+        this.baseURL = "https://api.football-data.org/v2/";
+    }
     // Setting header
     //Returns a Promise that will get the results according to seasons
-    getMatchResults(season): Promise<object> {
+    getMatchResults(season) {
         //axios.defaults.headers.common['X-Auth-Token'] = process.env.FOOTBALL_API_KEY // for all requests
-        return axios.get(this.baseURL + 'teams/86/matches/' + season + '&status=FINISHED&limit180', {
+        return axios_1.default.get(this.baseURL + 'teams/86/matches/' + season + '&status=FINISHED&limit180', {
             headers: {
                 'X-Auth-Token': process.env.FOOTBALL_API_KEY
             }
-        })
-
+        });
     }
 }
+exports.Fixer = Fixer;
 //Call function to get historical data
-
 //exports.handler = function(event, context, callback) {
 //Gets the historical data for a range of dates.
-    async function getHistoricalMatches() {
+function getHistoricalMatches() {
+    return __awaiter(this, void 0, void 0, function* () {
         /* You should check that the start date plus the number of days is
         less than the current date*/
-
         //Create instance of Fixer.io class
-        let fixerIo: Fixer = new Fixer();
-
+        let fixerIo = new Fixer();
         //Array to hold promises
-        let promiseArray: Array<Promise<object>> = [];
-
+        let promiseArray = [];
         //Work forward from start date
-        for (let i: number = 0; i < numSeasons; ++i) {
+        for (let i = 0; i < numSeasons; ++i) {
             promiseArray.push(fixerIo.getMatchResults(seasons[i]));
             //increase seasons numbers
         }
-
         try {
-            let resultArray: Array<object> = await Promise.all(promiseArray);
-
+            let resultArray = yield Promise.all(promiseArray);
             //Output the data
             resultArray.forEach((result) => {
-
-
                 //console.log(result);
                 //data contains the body of the web service response
-
                 let data = result['data'];
-
                 let datalength = data.matches.length;
                 for (let i = 0; i < datalength; i++) {
-
                     let newI = i;
                     let homeTeamName = data.matches[i].homeTeam["name"];
                     let awayTeamName = data.matches[i].awayTeam["name"];
                     let matchDate = data.matches[i].utcDate.substring(0, 10);
-
                     // Allow only league games
-                    if (data.matches[i].competition["name"] != "Primera Division"){
-
-                    } else {
+                    if (data.matches[i].competition["name"] != "Primera Division") {
+                    }
+                    else {
                         //console.log(data.matches[i].matchday + " , " + data.matches[i].homeTeam["id"] +" , "+ " = " + data.matches[i].competition["name"] + "    > " + matchDate + " *** " + homeTeamName + " -- " + awayTeamName);
                         //Table name and data for table
                         let params = {
@@ -103,33 +97,31 @@ export class Fixer {
                                 name: data.matches[i].homeTeam["name"]
                             }
                         };
-
                         let params_match = {
                             TableName: "Match",
                             Item: {
                                 match_id: data.matches[i].id,
-                                hometeam_id:data.matches[i].homeTeam["id"],
-                                hometeam_score:data.matches[i].score.fullTime["homeTeam"],
-                                awayteam_id:data.matches[i].awayTeam["id"],
-                                awayteam_score:data.matches[i].score.fullTime["awayTeam"],
-                                match_date:matchDate,
-                                matchday:data.matches[i].matchday
+                                hometeam_id: data.matches[i].homeTeam["id"],
+                                hometeam_score: data.matches[i].score.fullTime["homeTeam"],
+                                awayteam_id: data.matches[i].awayTeam["id"],
+                                awayteam_score: data.matches[i].score.fullTime["awayTeam"],
+                                match_date: matchDate,
+                                matchday: data.matches[i].matchday
                             }
-                        }
+                        };
                         //Insert into Database teams
                         //Store data in DynamoDB and handle errors
                     }
-                        console.log(homeTeamName);
-
+                    console.log(homeTeamName);
                 }
             });
-
-        } catch (error) {
+        }
+        catch (error) {
             console.log("Error: " + JSON.stringify(error));
         }
-    }
-
-
+    });
+}
 //Call function to get historical data
-    getHistoricalMatches();
+getHistoricalMatches();
 //}
+//# sourceMappingURL=footballData.js.map
