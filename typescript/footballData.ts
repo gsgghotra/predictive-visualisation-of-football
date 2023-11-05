@@ -119,7 +119,7 @@ export class Fixer {
                         //Insert into Database teams
                         //Store data in DynamoDB and handle errors
                     }
-                        console.log(homeTeamName);
+                        //console.log(homeTeamName);
 
                 }
             });
