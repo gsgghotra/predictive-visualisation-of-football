@@ -7,7 +7,6 @@ import * as dotenv from 'dotenv'
 // list of libraries
 //Copy variables in file into environment variables
 dotenv.config();
-console.log("Until you get this: " + process.env.HELLO);
 
 // Seasons Details
 let numSeasons = 1; // No of seasons can be increased here. Set to 0 because of limited request per minute. (Free Account)
